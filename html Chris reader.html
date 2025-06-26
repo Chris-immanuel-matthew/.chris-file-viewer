@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>.chris Viewer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    #output {
+      background: #222;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    input[type="file"] {
+      margin-bottom: 1rem;
+    }
+    a {
+      color: #9cf;
+    }
+    pre {
+      background: #000;
+      padding: 0.5rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    #dropZone {
+      border: 2px dashed #555;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      background-color: #1a1a1a;
+    }
+    #dropZone.dragover {
+      border-color: #0af;
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>.chris File Viewer</h1>
+  <input type="file" id="fileInput" accept=".chris,.chrishex,.txt" />
+  <div id="dropZone">or drag & drop your .chris file here</div>
+  <div id="output"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const decodeHex = (line) => {
+      return line.replace(/(^\s*[#>*\-]+\s*)([0-9A-Fa-f\s]+)/, (_, prefix, hexPart) => {
+        const chars = hexPart.trim().split(/\s+/).map(h => String.fromCharCode(parseInt(h, 16)));
+        return prefix + chars.join('');
+      });
+    };
+
+    const renderFile = (content) => {
+      const lines = content.split('\n').map(decodeHex);
+      const markdown = lines.join('\n');
+      document.getElementById('output').innerHTML = marked.parse(markdown);
+    };
+
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        renderFile(event.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    const dropZone = document.getElementById('dropZone');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        renderFile(event.target.result);
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
